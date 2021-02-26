@@ -1,12 +1,12 @@
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "tabela.c" // RENOMEAR
 #include "algs.c" // RENOMEAR
 
-
 //Função para validação do algorítmo recebido por parametro em main()
-int valida_entrada(){
+int valida_entrada(char entrada){
   int val;
 
   switch (alg) {
@@ -36,9 +36,6 @@ int main (int argc, char *argv[]){
     int tamMemoriaF = atoi(argv[4]);
     int clock = 0;
 
-		return val;
-	}
-
     /*
     Abertura e controle dos parametros de entrada
     */
@@ -50,7 +47,7 @@ int main (int argc, char *argv[]){
     }
 
   	//Verificando se a política de substituição é válida
-  	if(!valida_entrada()){
+  	if(!valida_entrada(alg)){
   			printf("Erro ao identificar política de substituição.\n");
   			return 0;
   	}
@@ -73,9 +70,8 @@ int main (int argc, char *argv[]){
   		return 0;
   	}
 
-
     /*
-    Criar a tabela de páginas de acordo com o tamanho especificado.
+    Criar a tabela de paginas de acordo com o tamanho especificado.
     */
     tabela tabela;
     criaTabela(&tabela, tamPagina);
@@ -89,33 +85,39 @@ int main (int argc, char *argv[]){
     /*
     leitura dos acessos.
     */
-    unsigned int tmpPOS;
-    char tmpOP;
-    int tamPagina_real = tamPagina * pow(2, 10); //tamanho da página em bytes
+    unsigned int endereco;
+    char operacao;
+    int tamPaginaBytes = tamPagina * pow(2, 10); //tamanho da página em bytes
 
     unsigned int indice;
-    unsigned int pageFault = 0;
-    unsigned int paginas_lidas = 0;
-    unsigned int paginas_escritas = 0;
+    unsigned int miss = 0;
+    unsigned int hit = 0;
+    unsigned int leituras = 0;
+    unsigned int escritas = 0;
 
     printf("Executando simulador ...\n");
 
-    while(fscanf(arquivo,"%x %c\n", &tmpPOS, &tmpOP) != EOF){
+    // imprimir a tabela de paginas aqui antes da execucao dos algoritmos
+
+    clock_t inicio = clock();
+
+    while(fscanf(arquivo,"%x %c\n", &endereco, &operacao) != EOF){
         clock++;
         //incrementa o número de instruções lidas (semelhante aos pulsos de clock)
-        indice = tmpPOS % tabela.num_entradas;
+        indice = endereco % tabela.num_entradas;
         //achei a pagina, agora vou acessar o conteudo dela
-        paginas_lidas += tmpOP == 'R' ? 1 : 0;
-        paginas_escritas += tmpOP == 'W' ? 1 : 0;
+        leituras += operacao == 'R' ? 1 : 0;
+        escritas += operacao == 'W' ? 1 : 0;
         if(tabela.paginas[indice].presente){
+            hit++;
             //pagina esta na memoria principal e seu endereço é a moldura
             //redefinindo último acesso
             memoria_processo.molduras[tabela.paginas[indice].moldura].ultimo_acesso = clock;
             //página modificada
-            memoria_processo.molduras[tabela.paginas[indice].moldura].pagina_modificada = tmpOP == 'W' ? 1 : 0;
+            memoria_processo.molduras[tabela.paginas[indice].moldura].pagina_modificada = operacao == 'W' ? 1 : 0;
         }else{
             //pagina nao esta na memoria principal
-            pageFault++;
+            miss++;
             unsigned int indice_moldura;
             if(!strcmp("fifo", alg) || !strcmp("FIFO", alg)){
                 //fifo, me dê a posição da moldura que eu possa fazer a substituição
@@ -142,13 +144,20 @@ int main (int argc, char *argv[]){
         }
     }
 
+    clock_t fim = clock();
+    double tempoExecucao = (double)(fim - inicio) / CLOCKS_PER_SEC;
+
+    // imprimir a tabela de paginas aqui depois da execucao dos algoritmos
+
     printf("Arquivo de entrada: %s\n", arq);
     printf("Tamanho da memoria: %d KB\n", tamMemoriaF);
-    printf("Tamanho das páginas: %d KB\n", tamPagina);
-    printf("Tecnica de substiuição: %s\n", alg);
-    printf("Páginas lidas: %d\n", paginas_lidas);
-    printf("Paginas escritas: %d\n", paginas_escritas);
-    printf("Faltas de pagina: %d\n\n", pageFault);
-
+    printf("Tamanho das paginas: %d KB\n", tamPagina);
+    printf("Tecnica de reposicao: %s\n", alg);
+    printf("Paginas lidas: %d\n", leituras);
+    printf("Paginas escritas: %d\n", escritas);
+    printf("Tempo de execucao: %f\n", tempoExecucao);
+    printf("Misses de pagina: %d\n\n", miss);
+    printf("Hits de pagina: %d\n\n", hit);
+    printf("Tabela: %s\n\n", "imprimir a tabela aqui");
     return 0;
   }
