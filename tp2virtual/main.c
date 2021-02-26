@@ -2,8 +2,92 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "tabela.c" // RENOMEAR
-#include "algs.c" // RENOMEAR
+#include <math.h>
+
+
+///////////////////////////////////////////////////////////////
+//                         tabela                           //
+/////////////////////////////////////////////////////////////
+
+typedef struct pagina{
+	char presente;
+	unsigned int moldura;
+} pagina;
+
+typedef struct tabela{
+	unsigned int num_entradas;
+	pagina *paginas;
+} tabela;
+
+typedef struct moldura{
+	pagina *pagina;
+	unsigned int ultimo_acesso; //Os clocks podem ser considerados como a colocação da intrução lida
+	unsigned int _carregamento; //O instante de carregamento para a memória
+	char pagina_modificada;
+} moldura;
+
+typedef struct memoria_processo{
+	unsigned int num_entradas;
+	moldura *molduras;
+} memoria_processo;
+
+
+
+void criaTabela(tabela *tabela, int tamPagina){
+	tabela->num_entradas = 4194304 / tamPagina; //os enderecos fornecidos sao de 32 bits, logo temos 544288kb mapeados
+    tabela->paginas = (pagina*) malloc(sizeof(pagina) * tabela->num_entradas);
+    for(int i = 0; i < tabela->num_entradas; i++){
+    	tabela->paginas[i].presente = 0;
+		tabela->paginas[i].moldura = 0;
+    }
+}
+
+void criaMemoriaProcesso(memoria_processo *memoria_processo, int tamMemoriaF){
+	memoria_processo->num_entradas = tamMemoriaF;
+	memoria_processo->molduras = (moldura*) malloc(sizeof(moldura)*tamMemoriaF);
+	for(int i=0;i<tamMemoriaF;i++){
+		memoria_processo->molduras[i].pagina = NULL;
+		memoria_processo->molduras[i].pagina_modificada = 0;
+	}
+}
+
+///////////////////////////////////////////////////////////////
+//                         algs                             //
+/////////////////////////////////////////////////////////////
+
+int fifo_escolha(memoria_processo *memoria_processo, unsigned int clock){
+	int escolha;
+	int primeiro_acesso = clock;
+	for(int i=0; i<memoria_processo->num_entradas; i++){
+		if(memoria_processo->molduras[i]._carregamento < primeiro_acesso){
+			escolha = i;
+			primeiro_acesso = memoria_processo->molduras[i]._carregamento;
+		}
+	}
+	return escolha;
+}
+
+int lru_escolha(memoria_processo *memoria_processo, unsigned int clock){
+	int escolha;
+	int ultimo_acesso = clock;
+	for(int i=0; i<memoria_processo->num_entradas; i++){
+		if(memoria_processo->molduras[i].ultimo_acesso < ultimo_acesso){
+			escolha = i;
+			ultimo_acesso = memoria_processo->molduras[i].ultimo_acesso;
+		}
+	}
+	return escolha;
+}
+
+int random_escolha(unsigned int num_entradas){
+	return rand() % num_entradas;
+}
+
+///////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
+
+
 
 ///////////////////////////////////////////////////////////////
 //                           PILHA                           //
@@ -11,7 +95,7 @@
 
 struct Pilha {
 
-	int topo; /* posiÃ§Ã£o elemento topo */
+	int topo; /* posicao elemento topo */
 	int capa;
 	float *pElem;
 
@@ -75,25 +159,12 @@ float retornatopo ( struct Pilha *p ){
 
 //Função para validação do algorítmo recebido por parametro em main()
 int valida_entrada(char* alg){
-  int val;
 
-  switch (*alg) {
-    case ("lru"):
-      val = 0;
-      break;
-    case ("2a"):
-      val = 0;
-      break;
-    case ("fifo"):
-      val = 0;
-      break;
-    case ("new"):
-      val = 0;
-      break;
-    default:
-      val = 1;
+  if ((strcmp(alg, "lru") == 0) || (strcmp(alg, "2a") == 0) || (strcmp(alg, "fifo") == 0) || (strcmp(alg, "new") == 0)){
+    return 1;
   }
-  return val;
+  else
+    return 0;
 }
 
 int main (int argc, char *argv[]){
@@ -102,7 +173,7 @@ int main (int argc, char *argv[]){
 /////////////////////////TESTE DA PILHA///////////////////////
 /////////////////////////////////////////////////////////////
 
-/*	struct Pilha minhapilha;
+	struct Pilha minhapilha;
 	int capacidade, op;
 	float valor;
 
@@ -170,7 +241,7 @@ int main (int argc, char *argv[]){
 		}
 	}
 	
-*/
+
 
 ///////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
@@ -182,7 +253,7 @@ int main (int argc, char *argv[]){
     char *arq = argv[2];
     int tamPagina = atoi(argv[3]);
     int tamMemoriaF = atoi(argv[4]);
-    int clock = 0;
+    int contador_clock = 0;
 
     /*
     Abertura e controle dos parametros de entrada
@@ -250,7 +321,7 @@ int main (int argc, char *argv[]){
     clock_t inicio = clock();
 
     while(fscanf(arquivo,"%x %c\n", &endereco, &operacao) != EOF){
-        clock++;
+        contador_clock++;
         //incrementa o número de instruções lidas (semelhante aos pulsos de clock)
         indice = endereco % tabela.num_entradas;
         //achei a pagina, agora vou acessar o conteudo dela
@@ -260,7 +331,7 @@ int main (int argc, char *argv[]){
             hit++;
             //pagina esta na memoria principal e seu endereço é a moldura
             //redefinindo último acesso
-            memoria_processo.molduras[tabela.paginas[indice].moldura].ultimo_acesso = clock;
+            memoria_processo.molduras[tabela.paginas[indice].moldura].ultimo_acesso = contador_clock;
             //página modificada
             memoria_processo.molduras[tabela.paginas[indice].moldura].pagina_modificada = operacao == 'W' ? 1 : 0;
         }else{
@@ -269,10 +340,10 @@ int main (int argc, char *argv[]){
             unsigned int indice_moldura;
             if(!strcmp("fifo", alg) || !strcmp("FIFO", alg)){
                 //fifo, me dê a posição da moldura que eu possa fazer a substituição
-                indice_moldura = fifo_escolha(&memoria_processo, clock);
+                indice_moldura = fifo_escolha(&memoria_processo, contador_clock);
             }else if(!strcmp("lru", alg) || !strcmp("LRU", alg)){
                 //lru, me dê a posição da moldura que eu possa fazer a substituição
-                indice_moldura = lru_escolha(&memoria_processo, clock);
+                indice_moldura = lru_escolha(&memoria_processo, contador_clock);
             }else if(!strcmp("random", alg) || !strcmp("RANDOM", alg)){
                  //random, me dê a posição da moldura que eu possa fazer a substituição
                 indice_moldura = random_escolha(memoria_processo.num_entradas);
@@ -286,8 +357,8 @@ int main (int argc, char *argv[]){
             tabela.paginas[indice].presente = 1;
             //a moldura recebe a página e atualiza seus temporizadores
             memoria_processo.molduras[indice_moldura].pagina = &tabela.paginas[indice];
-            memoria_processo.molduras[indice_moldura]._carregamento = clock;
-            memoria_processo.molduras[indice_moldura].ultimo_acesso = clock;
+            memoria_processo.molduras[indice_moldura]._carregamento = contador_clock;
+            memoria_processo.molduras[indice_moldura].ultimo_acesso = contador_clock;
 
         }
     }
