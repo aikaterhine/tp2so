@@ -84,10 +84,76 @@ int random_escolha(unsigned int num_entradas){
 }
 
 ///////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////
+//                            Lista                         //
 /////////////////////////////////////////////////////////////
 
+typedef struct elementoLista{         
+char *dado;         
+struct elementoLista *seguinte;       
+} Elemento;       
+typedef struct ListaDetectada{         
+Elemento *inicio;  Elemento *fim;  int tamanho;       
+} Fila;
 
+void inicializacao (Fila * sequencia){         
+  sequencia->inicio = NULL;         
+  sequencia->fim = NULL;         
+  sequencia->tamanho = 0;       
+}
+
+/* inserir (adicionar) um elemento na fila */       
+int inserir (Fila * sequencia, Elemento * atual, char *dado){         
+  Elemento *novo_elemento;         
+  if ((novo_elemento = (Elemento *) malloc (sizeof (Elemento))) == NULL)
+  return -1;         
+  if ((novo_elemento->dado = (char *) malloc (50 * sizeof (char))) == NULL)
+  return -1;         
+  strcpy (novo_elemento->dado, dado);         
+  if(atual == NULL){           
+  if(sequencia->tamanho == 0)             
+  sequencia->fim = novo_elemento;           
+  novo_elemento->seguinte = sequencia->inicio;           
+  sequencia-> inicio = novo_elemento;         
+  }
+  else 
+  {           
+  if(atual->seguinte == NULL)             
+  sequencia->fim = novo_elemento;           
+  novo_elemento->seguinte = atual->seguinte;           
+  atual-> seguinte = novo_elemento;         }         
+  sequencia->tamanho++;         
+  return 0;       
+}
+
+/* remover (eliminar) elemento da fila */       
+int remover (Fila * sequencia){         
+  Elemento *remov_elemento;         
+  if (sequencia->tamanho == 0)           
+  return -1;         
+  remov_elemento = sequencia->inicio;         
+  sequencia-> inicio = sequencia->inicio->seguinte;         
+  free (remov_elemento->dado);         
+  free (remov_elemento);         
+  sequencia->tamanho--;         
+  return 0;       
+}
+
+/* exibição da fila */       
+void exibir (Fila *sequencia){         
+  Elemento *atual;         
+  int i;         
+  atual = sequencia->inicio;         
+  for(i=0;i<sequencia->tamanho;++i){           
+  printf(" %s ", atual->dado);           
+  atual = atual->seguinte;         
+  }       
+}
+
+
+
+///////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////
 //                           PILHA                           //
@@ -170,10 +236,60 @@ int valida_entrada(char* alg){
 int main (int argc, char *argv[]){
 
 ///////////////////////////////////////////////////////////////
+/////////////////////////TESTE DA LISTA///////////////////////
+/////////////////////////////////////////////////////////////
+
+  /*Fila *sequencia;         
+  char *nome;         
+  if ((sequencia = (Fila *) malloc (sizeof (Fila))) == NULL)           
+  return -1;         
+  if ((nome = (char *) malloc (50 * sizeof (char))) == NULL)           
+  return -1;         
+  inicializacao(sequencia);         
+  printf ("Inserir uma palavra:");         
+  scanf ("%s", nome);         
+  inserir (sequencia, sequencia->fim, nome);         
+  printf ("A fila (%de elementos)\n",sequencia->tamanho);         
+  printf("\nInício de la fila [ ");         
+  exibir (sequencia);     
+
+  //primeiro elemento inserido será exibido         
+  printf(" ] fim de la fila\n\n");         
+  printf ("Inserir uma palavra:");         
+  scanf ("%s", nome);         
+  inserir(sequencia, sequencia->fim, nome);         
+  printf ("A fila (%de elementos)\n",sequencia->tamanho);         
+  printf("\nInício da fila [ ");         
+  exibir (sequencia);      
+
+  //primeiro elemento inserido será exibido       
+  printf(" ] fim da fila\n\n");         
+  printf ("Inserir uma palavra:");         
+  scanf ("%s", nome);         
+  inserir (sequencia, sequencia->fim, nome);         
+  printf ("A fila (%de elementos)\n",sequencia->tamanho);         
+  printf("\nInício de la fila [ ");         
+  exibir (sequencia);      
+
+  //primeiro elemento inserido será exibido       
+  printf(" ] fim da fila\n\n");         
+        
+  printf ("\nO primeiro elemento inserido é removido\n");         
+  remover (sequencia);              
+
+  //remoção do primeiro elemento inserido        
+  printf ("A fila (%d elementos): \n",sequencia->tamanho);         
+  printf("\nInício da fila [ ");         
+  exibir (sequencia);         
+  printf(" ] fim da fila\n\n");         
+  return 0; */
+
+
+///////////////////////////////////////////////////////////////
 /////////////////////////TESTE DA PILHA///////////////////////
 /////////////////////////////////////////////////////////////
 
-	struct Pilha minhapilha;
+	/*struct Pilha minhapilha;
 	int capacidade, op;
 	float valor;
 
@@ -239,7 +355,7 @@ int main (int argc, char *argv[]){
 
 			default: printf( "\nOPCAO INVALIDA! \n" );
 		}
-	}
+	}*/
 	
 
 
@@ -249,134 +365,121 @@ int main (int argc, char *argv[]){
 
 
 
-    char *alg = argv[1];
-    char *arq = argv[2];
-    int tamPagina = atoi(argv[3]);
-    int tamMemoriaF = atoi(argv[4]);
-    int contador_clock = 0;
+  char *alg = argv[1];
+  char *arq = argv[2];
+  int tamPagina = atoi(argv[3]);
+  int tamMemoriaF = atoi(argv[4]);
+  int contador_clock = 0;
 
-    /*
-    Abertura e controle dos parametros de entrada
-    */
-    FILE *arquivo = fopen(arq,"r");
+  /*
+  Abertura e controle dos parametros de entrada
+  */
+  FILE *arquivo = fopen(arq,"r");
 
-    if(arquivo == NULL){
-        printf("Erro ao ler arquivo.\n");
-        return 1;
-    }
-
-  	//Verificando se a política de substituição é válida
-  	if(!valida_entrada(alg)){
-  			printf("Erro ao identificar política de substituição.\n");
-  			return 0;
-  	}
-
-    //Verificando se os tamanhos de pagina e memória são válidos
-  	if((tamPagina % 2 || tamPagina <= 0)){
-  		printf("Erro ao identificar tamanho da página.\n");
-  		return 0;
-  	}
-  	if(tamPagina < 2 || tamPagina > 64){
-  		printf("Erro ao identificar tamanho da página: valor informado menor que 2 ou maior que 64.");
-  		return 0;
-  	}
-    	if((tamMemoriaF % 2 || tamMemoriaF <= 0)){
-    		printf("Erro ao identificar tamanho total da memória física.\n");
-    		return 0;
-    	}
-  	if(tamMemoriaF < 128 || tamMemoriaF > 16384){
-  		printf("Erro ao identificar tamanho total da memória física: valor informado menor que 128 ou maior que 16MB");
-  		return 0;
-  	}
-
-    /*
-    Criar a tabela de paginas de acordo com o tamanho especificado.
-    */
-    tabela tabela;
-    criaTabela(&tabela, tamPagina);
-
-    /*
-    Aloca memória para o processo
-    */
-    memoria_processo memoria_processo;
-    criaMemoriaProcesso(&memoria_processo, tamMemoriaF);
-
-    /*
-    leitura dos acessos.
-    */
-    unsigned int endereco;
-    char operacao;
-    int tamPaginaBytes = tamPagina * pow(2, 10); //tamanho da página em bytes
-
-    unsigned int indice;
-    unsigned int miss = 0;
-    unsigned int hit = 0;
-    unsigned int leituras = 0;
-    unsigned int escritas = 0;
-
-    printf("Executando simulador ...\n");
-
-    // imprimir a tabela de paginas aqui antes da execucao dos algoritmos
-
-    clock_t inicio = clock();
-
-    while(fscanf(arquivo,"%x %c\n", &endereco, &operacao) != EOF){
-        contador_clock++;
-        //incrementa o número de instruções lidas (semelhante aos pulsos de clock)
-        indice = endereco % tabela.num_entradas;
-        //achei a pagina, agora vou acessar o conteudo dela
-        leituras += operacao == 'R' ? 1 : 0;
-        escritas += operacao == 'W' ? 1 : 0;
-        if(tabela.paginas[indice].presente){
-            hit++;
-            //pagina esta na memoria principal e seu endereço é a moldura
-            //redefinindo último acesso
-            memoria_processo.molduras[tabela.paginas[indice].moldura].ultimo_acesso = contador_clock;
-            //página modificada
-            memoria_processo.molduras[tabela.paginas[indice].moldura].pagina_modificada = operacao == 'W' ? 1 : 0;
-        }else{
-            //pagina nao esta na memoria principal
-            miss++;
-            unsigned int indice_moldura;
-            if(!strcmp("fifo", alg) || !strcmp("FIFO", alg)){
-                //fifo, me dê a posição da moldura que eu possa fazer a substituição
-                indice_moldura = fifo_escolha(&memoria_processo, contador_clock);
-            }else if(!strcmp("lru", alg) || !strcmp("LRU", alg)){
-                //lru, me dê a posição da moldura que eu possa fazer a substituição
-                indice_moldura = lru_escolha(&memoria_processo, contador_clock);
-            }else if(!strcmp("random", alg) || !strcmp("RANDOM", alg)){
-                 //random, me dê a posição da moldura que eu possa fazer a substituição
-                indice_moldura = random_escolha(memoria_processo.num_entradas);
-            }
-            //a página que ocupava esta moldura não está mais presente
-            if(memoria_processo.molduras[indice_moldura].pagina){
-                memoria_processo.molduras[indice_moldura].pagina->presente = 0;
-                memoria_processo.molduras[indice_moldura].pagina_modificada = 0;
-            }
-            //a página referenciada pelo endereço agora esta presente
-            tabela.paginas[indice].presente = 1;
-            //a moldura recebe a página e atualiza seus temporizadores
-            memoria_processo.molduras[indice_moldura].pagina = &tabela.paginas[indice];
-            memoria_processo.molduras[indice_moldura]._carregamento = contador_clock;
-            memoria_processo.molduras[indice_moldura].ultimo_acesso = contador_clock;
-
-        }
-    }
-
-    clock_t fim = clock();
-    double tempoExecucao = (double)(fim - inicio) / CLOCKS_PER_SEC;
-
-    // imprimir a tabela de paginas aqui depois da execucao dos algoritmos
-
-    printf("Arquivo de entrada: %s\n", arq);
-    printf("Tamanho da memoria: %d KB\n", tamMemoriaF);
-    printf("Tamanho das paginas: %d KB\n", tamPagina);
-    printf("Tecnica de reposicao: %s\n", alg);
-    printf("Paginas lidas: %d\n", leituras);
-    printf("Paginas escritas: %d\n", escritas);
-    printf("Tempo de execucao: %f\n", tempoExecucao);
-    printf("Misses de pagina: %d\n\n", miss);
-    printf("Hits de pagina: %d\n\n", hit);
-    printf("Tabela: %s\n\n", "imprimir a tabela aqui");
-    return 0;
+  if(arquivo == NULL){
+      printf("Erro ao ler arquivo.\n");
+      return 1;
   }
+
+  //Verificando se a política de substituição é válida
+  if(!valida_entrada(alg)){
+  	printf("Erro ao identificar política de substituição.\n");
+  	return 0;
+  }
+
+  if(tamMemoriaF < 128 || tamMemoriaF > 16384){
+  	printf("Erro ao identificar tamanho total da memória física: valor informado menor que 128 ou maior que 16MB");
+  	return 0;
+  }
+
+  /*
+  Criar a tabela de paginas de acordo com o tamanho especificado.
+  */
+  tabela tabela;
+  criaTabela(&tabela, tamPagina);
+
+  /*
+  Aloca memória para o processo
+  */
+  memoria_processo memoria_processo;
+  criaMemoriaProcesso(&memoria_processo, tamMemoriaF);
+
+  /*
+  leitura dos acessos.
+  */
+  unsigned int endereco;
+  char operacao;
+  int tamPaginaBytes = tamPagina * pow(2, 10); //tamanho da página em bytes
+
+  unsigned int indice;
+  unsigned int miss = 0;
+  unsigned int hit = 0;
+  unsigned int leituras = 0;
+  unsigned int escritas = 0;
+
+  printf("Executando simulador ...\n");
+
+  // imprimir a tabela de paginas aqui antes da execucao dos algoritmos
+
+  clock_t inicio = clock();
+
+  while(fscanf(arquivo,"%x %c\n", &endereco, &operacao) != EOF){
+    contador_clock++;
+    //incrementa o número de instruções lidas (semelhante aos pulsos de clock)
+    indice = endereco % tabela.num_entradas;
+    //achei a pagina, agora vou acessar o conteudo dela
+    leituras += operacao == 'R' ? 1 : 0;
+    escritas += operacao == 'W' ? 1 : 0;
+    if(tabela.paginas[indice].presente){
+      hit++;
+      //pagina esta na memoria principal e seu endereço é a moldura
+      //redefinindo último acesso
+      memoria_processo.molduras[tabela.paginas[indice].moldura].ultimo_acesso = contador_clock;
+      //página modificada
+      memoria_processo.molduras[tabela.paginas[indice].moldura].pagina_modificada = operacao == 'W' ? 1 : 0;
+    }else{
+      //pagina nao esta na memoria principal
+      miss++;
+      unsigned int indice_moldura;
+      if(!strcmp("fifo", alg) || !strcmp("FIFO", alg)){
+        //fifo, me dê a posição da moldura que eu possa fazer a substituição
+        indice_moldura = fifo_escolha(&memoria_processo, contador_clock);
+      }else if(!strcmp("lru", alg) || !strcmp("LRU", alg)){
+        //lru, me dê a posição da moldura que eu possa fazer a substituição
+        indice_moldura = lru_escolha(&memoria_processo, contador_clock);
+      }else if(!strcmp("random", alg) || !strcmp("RANDOM", alg)){
+        //random, me dê a posição da moldura que eu possa fazer a substituição
+        indice_moldura = random_escolha(memoria_processo.num_entradas);
+      }
+      //a página que ocupava esta moldura não está mais presente
+      if(memoria_processo.molduras[indice_moldura].pagina){
+        memoria_processo.molduras[indice_moldura].pagina->presente = 0;
+        memoria_processo.molduras[indice_moldura].pagina_modificada = 0;
+      }
+      //a página referenciada pelo endereço agora esta presente
+      tabela.paginas[indice].presente = 1;
+      //a moldura recebe a página e atualiza seus temporizadores
+      memoria_processo.molduras[indice_moldura].pagina = &tabela.paginas[indice];
+      memoria_processo.molduras[indice_moldura]._carregamento = contador_clock;
+      memoria_processo.molduras[indice_moldura].ultimo_acesso = contador_clock;
+    }
+  }
+
+  clock_t fim = clock();
+  double tempoExecucao = (double)(fim - inicio) / CLOCKS_PER_SEC;
+
+  // imprimir a tabela de paginas aqui depois da execucao dos algoritmos
+
+  printf("Arquivo de entrada: %s\n", arq);
+  printf("Tamanho da memoria: %d KB\n", tamMemoriaF);
+  printf("Tamanho das paginas: %d KB\n", tamPagina);
+  printf("Tecnica de reposicao: %s\n", alg);
+  printf("Paginas lidas: %d\n", leituras);
+  printf("Paginas escritas: %d\n", escritas);
+  printf("Tempo de execucao: %f\n", tempoExecucao);
+  printf("Misses de pagina: %d\n\n", miss);
+  printf("Hits de pagina: %d\n\n", hit);
+  printf("Tabela: %s\n\n", "imprimir a tabela aqui");
+  return 0;
+
+}
