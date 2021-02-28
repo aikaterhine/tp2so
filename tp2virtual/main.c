@@ -11,7 +11,7 @@
 
 typedef struct pagina{
 	char presente;//TODO: Retirar
-	unsigned int moldura;//indice do array de quadros que corresponde a esta pagina
+	unsigned int moldura;//indice do array de quadros que corresponde a esta pagina. TODO: Renomear para "quadro"
   unsigned int numero_pagina;//numero da pagina, de acordo com os bits extraidos de um endereco do .log
 } pagina;
 
@@ -21,7 +21,7 @@ typedef struct tabela{
 	pagina *paginas;
 } tabela;
 
-typedef struct moldura{//TODO: Renomear este struct
+typedef struct moldura{//TODO: Renomear este struct para "quadro"
 	pagina *pagina;//TODO: Retirar isto
 	unsigned int ultimo_acesso; //Os clocks podem ser considerados como a colocação da intrução lida
 	unsigned int _carregamento; //O instante de carregamento para a memória
@@ -111,7 +111,8 @@ int inserir (Fila * sequencia, Elemento * atual, pagina page){
   if ((novo_elemento = (Elemento *) malloc (sizeof (Elemento))) == NULL)
     return -1;         
 
-  novo_elemento->page = page;   
+  novo_elemento->page.numero_pagina = page.numero_pagina;
+  novo_elemento->page.moldura = page.moldura;
           
   if(atual == NULL){           
     if(sequencia->tamanho == 0)             
@@ -156,10 +157,6 @@ void exibir (Fila *sequencia){
 
 
 ///////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////
 //                           PILHA                           //
 ///////////////////////////////////////////////////////////////
 
@@ -167,57 +164,50 @@ struct Pilha {
 
 	int topo; /* posicao elemento topo */
 	int capa;
-	float *pElem;
+	pagina *pElem;
 
 };
 
-void criarpilha( struct Pilha *p, int c ){
+void criarpilha( struct Pilha *p, int capa){
 
    p->topo = -1;
-   p->capa = c;
-   p->pElem = (float*) malloc (c * sizeof(float));
-
+   p->capa = capa;
+   p->pElem = (pagina*) malloc (capa * sizeof(pagina));
 }
 int estavazia ( struct Pilha *p ){
 
    if( p-> topo == -1 )
-
-      return 1;   // true
-
+      return 1;   
    else
-
-      return 0;   // false
+      return 0;   
 
 }
 
 int estacheia ( struct Pilha *p ){
 
 	if (p->topo == p->capa - 1)
-
 		return 1;
-
 	else
-
 		return 0;
 
 }
 
-void empilhar ( struct Pilha *p, float v){
+void empilhar ( struct Pilha *p, pagina page){
 
 	p->topo++;
-	p->pElem [p->topo] = v;
-
+	p->pElem[p->topo].numero_pagina = page.numero_pagina;
+  p->pElem[p->topo].moldura = page.moldura;
 }
 
-float desempilhar ( struct Pilha *p ){
+pagina desempilhar ( struct Pilha *p ){
 
-   float aux = p->pElem [p->topo];
+   pagina aux = p->pElem [p->topo];
    p->topo--;
    return aux;
 
 }
 
-float retornatopo ( struct Pilha *p ){
+pagina retornatopo ( struct Pilha *p ){
 
    return p->pElem [p->topo];
 
@@ -294,7 +284,7 @@ int main (int argc, char *argv[]){
 
 	/*struct Pilha minhapilha;
 	int capacidade, op;
-	float valor;
+	pagina page;
 
 	printf( "\nCapacidade da pilha? " );
 	scanf( "%d", &capacidade );
@@ -320,9 +310,9 @@ int main (int argc, char *argv[]){
 
 				else {
 
-					printf("\nVALOR? ");
-					scanf("%f", &valor);
-					empilhar (&minhapilha, valor);
+					printf("\nNumero da pagina? ");
+					scanf("%u", &page.numero_pagina);
+					empilhar(&minhapilha, page);
 
 				}
 				break;
@@ -334,8 +324,8 @@ int main (int argc, char *argv[]){
 
 				else{
 
-					valor = desempilhar (&minhapilha);
-					printf ( "\n%.1f DESEMPILHADO!\n", valor );
+					page = desempilhar (&minhapilha);
+					printf ( "\nPagina: %u DESEMPILHADA!\n", page.numero_pagina );
 
 				}
 				break;
@@ -347,8 +337,8 @@ int main (int argc, char *argv[]){
 
 				else {
 
-					valor = retornatopo (&minhapilha);
-					printf ( "\nTOPO: %.1f\n", valor );
+					page = retornatopo (&minhapilha);
+					printf ( "\nTOPO: %u\n", page.numero_pagina );
 
 				}
 				break;
