@@ -10,30 +10,32 @@
 /////////////////////////////////////////////////////////////
 
 typedef struct pagina{
-	char presente;
-	unsigned int moldura;
+	char presente;//TODO: Retirar
+	unsigned int moldura;//indice do array de quadros que corresponde a esta pagina
+  unsigned int numero_pagina;//numero da pagina, de acordo com os bits extraidos de um endereco do .log
 } pagina;
 
+//esta tabela nao sera usada para o fifo ou para o lru
 typedef struct tabela{
 	unsigned int num_entradas;
 	pagina *paginas;
 } tabela;
 
-typedef struct moldura{
-	pagina *pagina;
+typedef struct moldura{//TODO: Renomear este struct
+	pagina *pagina;//TODO: Retirar isto
 	unsigned int ultimo_acesso; //Os clocks podem ser considerados como a colocação da intrução lida
 	unsigned int _carregamento; //O instante de carregamento para a memória
-	char pagina_modificada;
+	char pagina_modificada;//TODO: Retirar isto
 } moldura;
 
-typedef struct memoria_processo{
+typedef struct memoria_processo{//TODO: Remover este struct
 	unsigned int num_entradas;
 	moldura *molduras;
 } memoria_processo;
 
 
 
-void criaTabela(tabela *tabela, int tamPagina){
+void criaTabela(tabela *tabela, int tamPagina){//TODO: Remover esta funcao
 	tabela->num_entradas = 4194304 / tamPagina; //os enderecos fornecidos sao de 32 bits, logo temos 544288kb mapeados
     tabela->paginas = (pagina*) malloc(sizeof(pagina) * tabela->num_entradas);
     for(int i = 0; i < tabela->num_entradas; i++){
@@ -42,7 +44,7 @@ void criaTabela(tabela *tabela, int tamPagina){
     }
 }
 
-void criaMemoriaProcesso(memoria_processo *memoria_processo, int tamMemoriaF){
+void criaMemoriaProcesso(memoria_processo *memoria_processo, int tamMemoriaF){//TODO: Remover esta funcao
 	memoria_processo->num_entradas = tamMemoriaF;
 	memoria_processo->molduras = (moldura*) malloc(sizeof(moldura)*tamMemoriaF);
 	for(int i=0;i<tamMemoriaF;i++){
@@ -54,6 +56,8 @@ void criaMemoriaProcesso(memoria_processo *memoria_processo, int tamMemoriaF){
 ///////////////////////////////////////////////////////////////
 //                         algs                             //
 /////////////////////////////////////////////////////////////
+
+//TODO: Remover esta secao
 
 int fifo_escolha(memoria_processo *memoria_processo, unsigned int clock){
 	int escolha;
@@ -88,8 +92,8 @@ int random_escolha(unsigned int num_entradas){
 /////////////////////////////////////////////////////////////
 
 typedef struct elementoLista{         
-char *dado;         
-struct elementoLista *seguinte;       
+  pagina page;         
+  struct elementoLista *seguinte;       
 } Elemento;       
 typedef struct ListaDetectada{         
 Elemento *inicio;  Elemento *fim;  int tamanho;       
@@ -102,25 +106,26 @@ void inicializacao (Fila * sequencia){
 }
 
 /* inserir (adicionar) um elemento na fila */       
-int inserir (Fila * sequencia, Elemento * atual, char *dado){         
+int inserir (Fila * sequencia, Elemento * atual, pagina page){         
   Elemento *novo_elemento;         
   if ((novo_elemento = (Elemento *) malloc (sizeof (Elemento))) == NULL)
-  return -1;         
-  if ((novo_elemento->dado = (char *) malloc (50 * sizeof (char))) == NULL)
-  return -1;         
-  strcpy (novo_elemento->dado, dado);         
+    return -1;         
+
+  novo_elemento->page = page;   
+          
   if(atual == NULL){           
-  if(sequencia->tamanho == 0)             
-  sequencia->fim = novo_elemento;           
-  novo_elemento->seguinte = sequencia->inicio;           
-  sequencia-> inicio = novo_elemento;         
+    if(sequencia->tamanho == 0)             
+      sequencia->fim = novo_elemento;           
+    novo_elemento->seguinte = sequencia->inicio;           
+    sequencia-> inicio = novo_elemento;         
   }
   else 
   {           
-  if(atual->seguinte == NULL)             
-  sequencia->fim = novo_elemento;           
-  novo_elemento->seguinte = atual->seguinte;           
-  atual-> seguinte = novo_elemento;         }         
+    if(atual->seguinte == NULL)             
+      sequencia->fim = novo_elemento;           
+    novo_elemento->seguinte = atual->seguinte;           
+    atual-> seguinte = novo_elemento;         
+  }         
   sequencia->tamanho++;         
   return 0;       
 }
@@ -129,10 +134,9 @@ int inserir (Fila * sequencia, Elemento * atual, char *dado){
 int remover (Fila * sequencia){         
   Elemento *remov_elemento;         
   if (sequencia->tamanho == 0)           
-  return -1;         
+    return -1;         
   remov_elemento = sequencia->inicio;         
-  sequencia-> inicio = sequencia->inicio->seguinte;         
-  free (remov_elemento->dado);         
+  sequencia-> inicio = sequencia->inicio->seguinte;                 
   free (remov_elemento);         
   sequencia->tamanho--;         
   return 0;       
@@ -144,8 +148,8 @@ void exibir (Fila *sequencia){
   int i;         
   atual = sequencia->inicio;         
   for(i=0;i<sequencia->tamanho;++i){           
-  printf(" %s ", atual->dado);           
-  atual = atual->seguinte;         
+    printf("numero da página: %u \n", atual->page.numero_pagina);           
+    atual = atual->seguinte;         
   }       
 }
 
@@ -240,49 +244,48 @@ int main (int argc, char *argv[]){
 /////////////////////////////////////////////////////////////
 
   /*Fila *sequencia;         
-  char *nome;         
+  pagina page;         
   if ((sequencia = (Fila *) malloc (sizeof (Fila))) == NULL)           
-  return -1;         
-  if ((nome = (char *) malloc (50 * sizeof (char))) == NULL)           
-  return -1;         
+    return -1;         
+          
   inicializacao(sequencia);         
-  printf ("Inserir uma palavra:");         
-  scanf ("%s", nome);         
-  inserir (sequencia, sequencia->fim, nome);         
+  printf ("Inserir um numero:");         
+  scanf ("%u", &page.numero_pagina);         
+  inserir (sequencia, sequencia->fim, page);         
   printf ("A fila (%de elementos)\n",sequencia->tamanho);         
-  printf("\nInício de la fila [ ");         
+  printf("---Início da fila\n");         
   exibir (sequencia);     
 
   //primeiro elemento inserido será exibido         
-  printf(" ] fim de la fila\n\n");         
-  printf ("Inserir uma palavra:");         
-  scanf ("%s", nome);         
-  inserir(sequencia, sequencia->fim, nome);         
+  printf("---fim da fila\n\n");         
+  printf ("Inserir um numero:");         
+  scanf ("%u", &page.numero_pagina);         
+  inserir(sequencia, sequencia->fim, page);         
   printf ("A fila (%de elementos)\n",sequencia->tamanho);         
-  printf("\nInício da fila [ ");         
+  printf("---Início da fila\n");         
   exibir (sequencia);      
 
   //primeiro elemento inserido será exibido       
-  printf(" ] fim da fila\n\n");         
-  printf ("Inserir uma palavra:");         
-  scanf ("%s", nome);         
-  inserir (sequencia, sequencia->fim, nome);         
+  printf("---fim da fila\n\n");          
+  printf ("Inserir um numero:");         
+  scanf ("%u", &page.numero_pagina);         
+  inserir (sequencia, sequencia->fim, page);         
   printf ("A fila (%de elementos)\n",sequencia->tamanho);         
-  printf("\nInício de la fila [ ");         
+  printf("---Início da fila\n");          
   exibir (sequencia);      
 
   //primeiro elemento inserido será exibido       
-  printf(" ] fim da fila\n\n");         
+  printf("---fim da fila\n\n");        
         
   printf ("\nO primeiro elemento inserido é removido\n");         
   remover (sequencia);              
 
   //remoção do primeiro elemento inserido        
   printf ("A fila (%d elementos): \n",sequencia->tamanho);         
-  printf("\nInício da fila [ ");         
+  printf("---Início da fila\n");         
   exibir (sequencia);         
-  printf(" ] fim da fila\n\n");         
-  return 0; */
+  printf("---fim da fila\n\n");         
+  return 0;*/
 
 
 ///////////////////////////////////////////////////////////////
