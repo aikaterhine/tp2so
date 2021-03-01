@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdbool.h>
+#include <unistd.h>//TODO: Remover esta linha
 
 
 ///////////////////////////////////////////////////////////////
@@ -13,6 +15,8 @@ typedef struct pagina{
 	char presente;//TODO: Retirar
 	unsigned int moldura;//indice do array de quadros que corresponde a esta pagina. TODO: Renomear para "quadro"
   unsigned int numero_pagina;//numero da pagina, de acordo com os bits extraidos de um endereco do .log
+  unsigned int ultimo_endereco_acessado;//contem o ultimo endereco acessado desta pagina
+  bool suja;//indica se a pagina esta suja ou nao
 } pagina;
 
 //esta tabela nao sera usada para o fifo ou para o lru
@@ -25,6 +29,7 @@ typedef struct moldura{//TODO: Renomear este struct para "quadro"
 	pagina *pagina;//TODO: Retirar isto
 	unsigned int ultimo_acesso; //Os clocks podem ser considerados como a colocação da intrução lida
 	unsigned int _carregamento; //O instante de carregamento para a memória
+  bool esta_na_memoria;//indica se o quadro esta na memoria ou nao
 	char pagina_modificada;//TODO: Retirar isto
 } moldura;
 
@@ -380,10 +385,7 @@ int main (int argc, char *argv[]){
   	return 0;
   }
 
-  if(tamMemoriaF < 128 || tamMemoriaF > 16384){
-  	printf("Erro ao identificar tamanho total da memória física: valor informado menor que 128 ou maior que 16MB");
-  	return 0;
-  }
+  int total_paginas = tamMemoriaF / tamPagina; //numero total de paginas/quadros(a tabela de paginas tera no maximo esta quantidade de registros)
 
   /*
   Criar a tabela de paginas de acordo com o tamanho especificado.
@@ -391,11 +393,25 @@ int main (int argc, char *argv[]){
   tabela tabela;
   criaTabela(&tabela, tamPagina);
 
+  Fila *tabela_fifo;              
+  if ((tabela_fifo = (Fila *) malloc(sizeof(Fila))) == NULL)           
+    return -1;         
+          
+  inicializacao(tabela_fifo); 
+
+
   /*
   Aloca memória para o processo
   */
   memoria_processo memoria_processo;
   criaMemoriaProcesso(&memoria_processo, tamMemoriaF);
+
+  moldura quadros_memoria[total_paginas];//esta sera a estrutura responsavel por simular os quadros que estarao na memoria
+
+  int i;
+  for(i = 0; i < total_paginas; i++){
+    quadros_memoria[i].esta_na_memoria = false;
+  }
 
   /*
   leitura dos acessos.
@@ -403,6 +419,18 @@ int main (int argc, char *argv[]){
   unsigned int endereco;
   char operacao;
   int tamPaginaBytes = tamPagina * pow(2, 10); //tamanho da página em bytes
+
+  //Pego o numero maximo de bits que podem ser usados para identificar as paginas 
+  unsigned s, tmp;
+  tmp = tamPaginaBytes;
+  s = 0;
+  while (tmp>1) {
+    tmp = tmp>>1;
+    s++;
+  }
+  s = 32u - s;
+
+  printf("valor de s: %u\n", s);
 
   unsigned int indice;
   unsigned int miss = 0;
@@ -418,7 +446,20 @@ int main (int argc, char *argv[]){
 
   while(fscanf(arquivo,"%x %c\n", &endereco, &operacao) != EOF){
     contador_clock++;
-    //incrementa o número de instruções lidas (semelhante aos pulsos de clock)
+
+    printf("----------------Numero da pagina acessada: %d\n", endereco >> s);
+
+    /*Elemento* i_elemento;
+    i_elemento = tabela_fifo->inicio;
+    while(1){
+      printf("Numero da pagina na fila: %u\n", i_elemento->page.numero_pagina);
+
+      if(i_elemento == tabela_fifo->fim)
+        break;
+    }*/
+    
+    
+    /*//incrementa o número de instruções lidas (semelhante aos pulsos de clock)
     indice = endereco % tabela.num_entradas;
     //achei a pagina, agora vou acessar o conteudo dela
     leituras += operacao == 'R' ? 1 : 0;
@@ -455,10 +496,11 @@ int main (int argc, char *argv[]){
       memoria_processo.molduras[indice_moldura].pagina = &tabela.paginas[indice];
       memoria_processo.molduras[indice_moldura]._carregamento = contador_clock;
       memoria_processo.molduras[indice_moldura].ultimo_acesso = contador_clock;
-    }
+    }*/
   }
 
   clock_t fim = clock();
+
   double tempoExecucao = (double)(fim - inicio) / CLOCKS_PER_SEC;
 
   // imprimir a tabela de paginas aqui depois da execucao dos algoritmos
