@@ -4,7 +4,6 @@
 #include <string.h>
 #include <math.h>
 #include <stdbool.h>
-#include <unistd.h>//TODO: Remover esta linha
 
 
 ///////////////////////////////////////////////////////////////
@@ -12,8 +11,7 @@
 /////////////////////////////////////////////////////////////
 
 typedef struct pagina{
-	char presente;//TODO: Retirar
-	int quadro;//indice do array de quadros que corresponde a esta pagina. TODO: Renomear para "quadro"
+	int quadro;//indice do array de quadros que corresponde a esta pagina.
   unsigned int numero_pagina;//numero da pagina, de acordo com os bits extraidos de um endereco do .log
   unsigned int ultimo_endereco_acessado;//contem o ultimo endereco acessado desta pagina
   bool suja;//indica se a pagina esta suja ou nao
@@ -25,12 +23,10 @@ typedef struct tabela{
 	pagina *paginas;
 } tabela;
 
-typedef struct quadro{//TODO: Renomear este struct para "quadro"
-	pagina *pagina;//TODO: Retirar isto
+typedef struct quadro{
 	unsigned int ultimo_acesso; //Os clocks podem ser considerados como a colocação da intrução lida
 	unsigned int _carregamento; //O instante de carregamento para a memória
   bool esta_na_memoria;//indica se o quadro esta na memoria ou nao
-	char pagina_modificada;//TODO: Retirar isto
 } quadro;
 
 ///////////////////////////////////////////////////////////////
@@ -443,7 +439,7 @@ int main (int argc, char *argv[]){
     Elemento* i_elemento;
     i_elemento = tabela_fifo->inicio;
 
-    printf("$$$$$$$$$$$$$$Lista de páginas na tabela(algoritmo fifo): %u\n", i_elemento->page.numero_pagina);
+    printf("$$$$$$$$$$$$$$Lista de páginas na tabela(algoritmo fifo)\n");
     while(i_elemento != NULL){
       printf("Numero da pagina na fila: %u\n", i_elemento->page.numero_pagina);
 
