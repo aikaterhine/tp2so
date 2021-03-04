@@ -101,65 +101,6 @@ void exibir (Fila *sequencia){
   }       
 }
 
-
-
-///////////////////////////////////////////////////////////////
-//                           PILHA                           //
-///////////////////////////////////////////////////////////////
-
-struct Pilha {
-
-	int topo; /* posicao elemento topo */
-	int capa;
-	pagina *pElem;
-
-};
-
-void criarpilha( struct Pilha *p, int capa){
-
-   p->topo = -1;
-   p->capa = capa;
-   p->pElem = (pagina*) malloc (capa * sizeof(pagina));
-}
-int estavazia ( struct Pilha *p ){
-
-   if( p-> topo == -1 )
-      return 1;   
-   else
-      return 0;   
-
-}
-
-int estacheia ( struct Pilha *p ){
-
-	if (p->topo == p->capa - 1)
-		return 1;
-	else
-		return 0;
-
-}
-
-void empilhar ( struct Pilha *p, pagina page){
-
-	p->topo++;
-	p->pElem[p->topo].numero_pagina = page.numero_pagina;
-  p->pElem[p->topo].quadro = page.quadro;
-}
-
-pagina desempilhar ( struct Pilha *p ){
-
-   pagina aux = p->pElem [p->topo];
-   p->topo--;
-   return aux;
-
-}
-
-pagina retornatopo ( struct Pilha *p ){
-
-   return p->pElem [p->topo];
-
-}
-
 ///////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////
@@ -175,135 +116,6 @@ int valida_entrada(char* alg){
 }
 
 int main (int argc, char *argv[]){
-
-///////////////////////////////////////////////////////////////
-/////////////////////////TESTE DA LISTA///////////////////////
-/////////////////////////////////////////////////////////////
-
-  /*Fila *sequencia;         
-  pagina page;         
-  if ((sequencia = (Fila *) malloc (sizeof (Fila))) == NULL)           
-    return -1;         
-          
-  inicializacao(sequencia);         
-  printf ("Inserir um numero:");         
-  scanf ("%u", &page.numero_pagina);         
-  inserir (sequencia, sequencia->fim, page);         
-  printf ("A fila (%de elementos)\n",sequencia->tamanho);         
-  printf("---Início da fila\n");         
-  exibir (sequencia);     
-
-  //primeiro elemento inserido será exibido         
-  printf("---fim da fila\n\n");         
-  printf ("Inserir um numero:");         
-  scanf ("%u", &page.numero_pagina);         
-  inserir(sequencia, sequencia->fim, page);         
-  printf ("A fila (%de elementos)\n",sequencia->tamanho);         
-  printf("---Início da fila\n");         
-  exibir (sequencia);      
-
-  //primeiro elemento inserido será exibido       
-  printf("---fim da fila\n\n");          
-  printf ("Inserir um numero:");         
-  scanf ("%u", &page.numero_pagina);         
-  inserir (sequencia, sequencia->fim, page);         
-  printf ("A fila (%de elementos)\n",sequencia->tamanho);         
-  printf("---Início da fila\n");          
-  exibir (sequencia);      
-
-  //primeiro elemento inserido será exibido       
-  printf("---fim da fila\n\n");        
-        
-  printf ("\nO primeiro elemento inserido é removido\n");         
-  remover (sequencia);              
-
-  //remoção do primeiro elemento inserido        
-  printf ("A fila (%d elementos): \n",sequencia->tamanho);         
-  printf("---Início da fila\n");         
-  exibir (sequencia);         
-  printf("---fim da fila\n\n");         
-  return 0;*/
-
-
-///////////////////////////////////////////////////////////////
-/////////////////////////TESTE DA PILHA///////////////////////
-/////////////////////////////////////////////////////////////
-
-	/*struct Pilha minhapilha;
-	int capacidade, op;
-	pagina page;
-
-	printf( "\nCapacidade da pilha? " );
-	scanf( "%d", &capacidade );
-
-	criarpilha (&minhapilha, capacidade);
-
-	while( 1 ){ 
-
-		printf("\n1- empilhar (push)\n");
-		printf("2- desempilhar (POP)\n");
-		printf("3- Mostrar o topo \n");
-		printf("4- sair\n");
-		printf("\nopcao? ");
-		scanf("%d", &op);
-
-		switch (op){
-
-			case 1: //push
-
-				if( estacheia( &minhapilha ) == 1 )
-
-					printf("\nPILHA CHEIA! \n");
-
-				else {
-
-					printf("\nNumero da pagina? ");
-					scanf("%u", &page.numero_pagina);
-					empilhar(&minhapilha, page);
-
-				}
-				break;
-
-			case 2: //pop
-				if ( estavazia(&minhapilha) == 1 )
-
-					printf( "\nPILHA VAZIA! \n" );
-
-				else{
-
-					page = desempilhar (&minhapilha);
-					printf ( "\nPagina: %u DESEMPILHADA!\n", page.numero_pagina );
-
-				}
-				break;
-
-			case 3: // mostrar o topo
-				if ( estavazia (&minhapilha) == 1 )
-
-					printf( "\nPILHA VAZIA!\n" );
-
-				else {
-
-					page = retornatopo (&minhapilha);
-					printf ( "\nTOPO: %u\n", page.numero_pagina );
-
-				}
-				break;
-
-			case 4: 
-				exit(0);
-
-			default: printf( "\nOPCAO INVALIDA! \n" );
-		}
-	}*/
-	
-
-
-///////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////
-
-
 
   char *alg = argv[1];
   char *arq = argv[2];
@@ -503,7 +315,19 @@ int main (int argc, char *argv[]){
   clock_t fim = clock();
 
   double tempoExecucao = (double)(fim - inicio) / CLOCKS_PER_SEC;
-  //TODO: Implementar a impressão da tabela
+
+  printf("Arquivo de entrada: %s\n", arq);
+  printf("Tamanho da memoria: %d KB\n", tamMemoriaF);
+  printf("Tamanho das paginas: %d KB\n", tamPagina);
+  printf("Tecnica de reposicao: %s\n", alg);
+  printf("Paginas lidas: %d\n", leituras);
+  printf("Paginas escritas: %d\n", escritas);
+  printf("Tempo de execucao: %f\n\n", tempoExecucao);
+  printf("Misses de pagina: %d\n", miss);
+  printf("Hits de pagina: %d\n\n", hit);
+  printf("Tabela: \n\n");
+
+  //TODO: Adequar a impressão para ter os campos minimos pedidos na especificacao
   if(strcmp(alg, "fifo") == 0){
     Elemento* i_elemento;
     i_elemento = tabela_fifo->inicio;
@@ -527,20 +351,7 @@ int main (int argc, char *argv[]){
     }
     printf("$$$$$$$$$$$$$$Fim da listagem\n");
   }
-  
 
-  // imprimir a tabela de paginas aqui depois da execucao dos algoritmos
-
-  printf("Arquivo de entrada: %s\n", arq);
-  printf("Tamanho da memoria: %d KB\n", tamMemoriaF);
-  printf("Tamanho das paginas: %d KB\n", tamPagina);
-  printf("Tecnica de reposicao: %s\n", alg);
-  printf("Paginas lidas: %d\n", leituras);
-  printf("Paginas escritas: %d\n", escritas);
-  printf("Tempo de execucao: %f\n\n", tempoExecucao);
-  printf("Misses de pagina: %d\n", miss);
-  printf("Hits de pagina: %d\n\n", hit);
-  printf("Tabela: %s\n\n", "imprimir a tabela aqui");
   return 0;
 
 }
