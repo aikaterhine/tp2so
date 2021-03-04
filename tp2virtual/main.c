@@ -16,6 +16,7 @@ typedef struct pagina{
   unsigned int ultimo_endereco_acessado;//contem o ultimo endereco acessado desta pagina
   int ultimo_acesso;//indica o instante do ultimo acesso a essa pagina
   bool suja;//indica se a pagina esta suja ou nao
+  bool segunda_chance;//indica se a pagina tem mais uma chance de ficar na tabela(apenas para o algoritmo "second chance")
 } pagina;
 
 //esta tabela nao sera usada para o fifo ou para o lru
@@ -153,11 +154,12 @@ int main (int argc, char *argv[]){
     inicializacao(tabela_fifo); 
   }
   else
-  if(strcmp(alg, "lru") == 0){
+  if(strcmp(alg, "lru") == 0 || strcmp(alg, "2a") == 0){
 
     tabela_nao_fifo.paginas = (pagina *) malloc(total_paginas * sizeof(pagina));
     for(i = 0; i < total_paginas; i++){
       tabela_nao_fifo.paginas[i].quadro = -1;
+      tabela_nao_fifo.paginas[i].segunda_chance = false;
     }
   }
         
@@ -310,6 +312,71 @@ int main (int argc, char *argv[]){
         quadros_memoria[indice_quadro_a_inserir].esta_na_memoria = true;
       }
     }
+    else
+    if(strcmp(alg, "2a") == 0){
+      //verifica se pagina esta na tabela
+      int i_pagina;
+      bool pagina_esta_na_tabela = false;
+      for(i_pagina = 0; i_pagina < total_paginas; i_pagina++){
+        //se a pagina acessada esta na tabela de paginas
+        if(tabela_nao_fifo.paginas[i_pagina].numero_pagina == numero_pagina_acessada){
+          hit++;
+
+          //atualiza dados da tabela, referentes a pagina acessada
+          tabela_nao_fifo.paginas[i_pagina].ultimo_endereco_acessado = endereco;
+          tabela_nao_fifo.paginas[i_pagina].suja = (operacao == 'W');
+          tabela_nao_fifo.paginas[i_pagina].ultimo_acesso = contador_clock;
+          tabela_nao_fifo.paginas[i_pagina].segunda_chance = true;
+
+          pagina_esta_na_tabela = true;
+          break;
+        }
+      }
+
+      //se a pagina nao esta na tabela
+      if(!pagina_esta_na_tabela){
+        miss++;
+
+        //pega o indice, no array de quadros na memoria, que recebera o novo quadro ou detecta que todos os quadros na memoria estao ocupados
+        int indice_quadro_a_inserir = -1;
+        for(i = 0; i < total_paginas; i++){
+          if(!quadros_memoria[i].esta_na_memoria){
+            indice_quadro_a_inserir = i;
+            break;
+          }
+        }
+
+        //se a memoria ja estiver lotada de quadros
+        if(indice_quadro_a_inserir == -1){
+          //pego o indice da pagina least recently used
+          int menor_ultimo_acesso = -1;
+          for(i_pagina = 0; i_pagina < total_paginas; i_pagina++){
+
+            if(tabela_nao_fifo.paginas[i_pagina].ultimo_acesso < menor_ultimo_acesso){
+              menor_ultimo_acesso = tabela_nao_fifo.paginas[i_pagina].ultimo_acesso;
+              indice_quadro_a_inserir = i_pagina;
+            }
+            
+            //se a pagina LRU tem uma segunda chance, remove esta segunda chance e reavalia a tabela de paginas
+            if((i_pagina == total_paginas - 1) && (tabela_nao_fifo.paginas[indice_quadro_a_inserir].segunda_chance)){
+              tabela_nao_fifo.paginas[indice_quadro_a_inserir].segunda_chance = false;
+              i_pagina = 0; 
+            }
+          }
+        }
+
+        //escreve(ou sobrescreve) uma nova pagina na tabela
+        tabela_nao_fifo.paginas[indice_quadro_a_inserir].numero_pagina = numero_pagina_acessada;
+        tabela_nao_fifo.paginas[indice_quadro_a_inserir].quadro = indice_quadro_a_inserir;
+        tabela_nao_fifo.paginas[indice_quadro_a_inserir].suja = (operacao == 'W');
+        tabela_nao_fifo.paginas[indice_quadro_a_inserir].ultimo_endereco_acessado = endereco;
+        tabela_nao_fifo.paginas[indice_quadro_a_inserir].ultimo_acesso = contador_clock;
+        tabela_nao_fifo.paginas[indice_quadro_a_inserir].segunda_chance = false; 
+
+        //atualiza um atributo do quadro que estara na memoria
+        quadros_memoria[indice_quadro_a_inserir].esta_na_memoria = true;
+      }
+    }
   }
 
   clock_t fim = clock();
@@ -334,19 +401,19 @@ int main (int argc, char *argv[]){
 
     printf("$$$$$$$$$$$$$$Lista de páginas na tabela(algoritmo fifo)\n");
     while(i_elemento != NULL){
-      printf("Numero da pagina na fila: %u\n", i_elemento->page.numero_pagina);
+      printf("Numero da pagina na tabela: %u\n", i_elemento->page.numero_pagina);
 
       i_elemento = i_elemento->seguinte;
     }
     printf("$$$$$$$$$$$$$$Fim da listagem\n");
   }
   else
-  if(strcmp(alg, "lru") == 0){
+  if(strcmp(alg, "lru") == 0 || strcmp(alg, "2a") == 0){
     int i_pagina;
     printf("$$$$$$$$$$$$$$Lista de páginas na tabela(algoritmo lru)\n");
     for(i_pagina = 0; i_pagina < total_paginas; i_pagina++){
       if(tabela_nao_fifo.paginas[i_pagina].quadro != -1){
-        printf("Numero da pagina na fila: %u\n", tabela_nao_fifo.paginas[i_pagina].numero_pagina);
+        printf("Numero da pagina na tabela: %u\n", tabela_nao_fifo.paginas[i_pagina].numero_pagina);
       }
     }
     printf("$$$$$$$$$$$$$$Fim da listagem\n");
