@@ -378,7 +378,7 @@ int main (int argc, char *argv[]){
       }
     }
     else
-    if(strcmp(alg, "new") == 0){//TODO: Alterar para que seja o algoritmo novo(que será a substituicao aleatoria)
+    if(strcmp(alg, "new") == 0){//algoritmo que escolhe aleatoriamente a pagina a ser removida
       //verifica se pagina esta na tabela
       int i_pagina;
       bool pagina_esta_na_tabela = false;
@@ -413,7 +413,7 @@ int main (int argc, char *argv[]){
         if(indice_quadro_a_inserir == -1){
           //pego o indice de uma pagina aleatoriamente
           int menor_ultimo_acesso = -1;
-          indice_quadro_a_inserir = (rand() % total_paginas);//TODO: Colocar operacao de random aqui
+          indice_quadro_a_inserir = (rand() % total_paginas);
         }
 
         //escreve(ou sobrescreve) uma nova pagina na tabela
@@ -443,29 +443,31 @@ int main (int argc, char *argv[]){
   printf("Hits de pagina: %d\n\n", hit);
   printf("Tabela: \n\n");
 
-  //TODO: Adequar a impressão para ter os campos minimos pedidos na especificacao
   if(strcmp(alg, "fifo") == 0){
     Elemento* i_elemento;
     i_elemento = tabela_fifo->inicio;
 
-    printf("$$$$$$$$$$$$$$Lista de páginas na tabela\n");
     while(i_elemento != NULL){
-      printf("Numero da pagina na tabela: %u\n", i_elemento->page.numero_pagina);
+      printf("Numero da pagina: %u | Ultimo endereco acessado: %u | bit de controle(pagina suja): %d\n",
+            i_elemento->page.numero_pagina, 
+            i_elemento->page.ultimo_endereco_acessado, 
+            i_elemento->page.suja ? 1 : 0);
 
       i_elemento = i_elemento->seguinte;
     }
-    printf("$$$$$$$$$$$$$$Fim da listagem\n");
   }
   else
   if(strcmp(alg, "lru") == 0 || strcmp(alg, "2a") == 0 || strcmp(alg, "new") == 0){
     int i_pagina;
-    printf("$$$$$$$$$$$$$$Lista de páginas na tabela\n");
     for(i_pagina = 0; i_pagina < total_paginas; i_pagina++){
+      //se a pagina acessada tem um quadro na memoria
       if(tabela_nao_fifo.paginas[i_pagina].quadro != -1){
-        printf("Numero da pagina na tabela: %u\n", tabela_nao_fifo.paginas[i_pagina].numero_pagina);
+        printf("Numero da pagina: %u | Ultimo endereco acessado: %u | bit de controle(pagina suja): %d\n",
+              tabela_nao_fifo.paginas[i_pagina].numero_pagina, 
+              tabela_nao_fifo.paginas[i_pagina].ultimo_endereco_acessado, 
+              tabela_nao_fifo.paginas[i_pagina].suja ? 1 : 0);
       }
     }
-    printf("$$$$$$$$$$$$$$Fim da listagem\n");
   }
 
   return 0;
