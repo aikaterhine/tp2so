@@ -190,7 +190,6 @@ int main (int argc, char *argv[]){
   unsigned int indice;
   unsigned int miss = 0;
   unsigned int hit = 0;
-  unsigned int leituras = 0;
   unsigned int escritas = 0;
 
   printf("Executando simulador ...\n");
@@ -199,8 +198,6 @@ int main (int argc, char *argv[]){
 
   while(fscanf(arquivo,"%x %c\n", &endereco, &operacao) != EOF){
     contador_clock++;
-    leituras += operacao == 'R' ? 1 : 0;
-    escritas += operacao == 'W' ? 1 : 0;
 
     unsigned int numero_pagina_acessada = endereco >> s;
 
@@ -242,6 +239,7 @@ int main (int argc, char *argv[]){
         if(indice_quadro_a_inserir == -1){
           indice_quadro_a_inserir = tabela_fifo->inicio->page.quadro;
           remover(tabela_fifo);
+          escritas += tabela_fifo->inicio->page.suja ? 1 : 0;
         }
 
         //insere uma nova pagina na fila
@@ -299,6 +297,8 @@ int main (int argc, char *argv[]){
               indice_quadro_a_inserir = i_pagina;
             }
           }
+
+          escritas += tabela_nao_fifo.paginas[indice_quadro_a_inserir].suja ? 1 : 0;
         }
 
         //escreve(ou sobrescreve) uma nova pagina na tabela
@@ -363,6 +363,8 @@ int main (int argc, char *argv[]){
               i_pagina = 0; 
             }
           }
+
+          escritas += tabela_nao_fifo.paginas[indice_quadro_a_inserir].suja ? 1 : 0;
         }
 
         //escreve(ou sobrescreve) uma nova pagina na tabela
@@ -414,6 +416,8 @@ int main (int argc, char *argv[]){
           //pego o indice de uma pagina aleatoriamente
           int menor_ultimo_acesso = -1;
           indice_quadro_a_inserir = (rand() % total_paginas);
+
+          escritas += tabela_nao_fifo.paginas[indice_quadro_a_inserir].suja ? 1 : 0;
         }
 
         //escreve(ou sobrescreve) uma nova pagina na tabela
@@ -436,10 +440,10 @@ int main (int argc, char *argv[]){
   printf("Tamanho da memoria: %d KB\n", tamMemoriaF);
   printf("Tamanho das paginas: %d KB\n", tamPagina);
   printf("Tecnica de reposicao: %s\n", alg);
-  printf("Paginas lidas: %d\n", leituras);
-  printf("Paginas escritas: %d\n", escritas);
+  printf("Pagefaults: %d\n", miss);
+  printf("Paginas sujas escritas: %d\n", escritas);
   printf("Tempo de execucao: %f\n\n", tempoExecucao);
-  printf("Misses de pagina: %d\n", miss);
+  
   printf("Hits de pagina: %d\n\n", hit);
   printf("Tabela: \n\n");
 
