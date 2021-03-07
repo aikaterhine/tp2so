@@ -175,17 +175,16 @@ int main (int argc, char *argv[]){
 
   unsigned int endereco;//endereco lido em uma linha do arquivo
   char operacao;//operacao descrita em uma linha do arquivo
-  int tamPaginaBytes = tamPagina * pow(2, 10); //tamanho da pagina em bytes
 
   //Pego o numero maximo de bits que podem ser usados para identificar as paginas(algoritmo retirado da especificacao deste trabalho) 
   unsigned s, tmp;
-  tmp = tamPaginaBytes;
+  tmp = tamPagina;
   s = 0;
   while (tmp>1) {
-    tmp = tmp>>1;
-    s++;
+      tmp = tmp>>1;
+      s++;
   }
-  s = 32u - s;
+  s = 10 + s;
 
   printf("valor de s: %u\n", s);
 
