@@ -123,7 +123,7 @@ int main (int argc, char *argv[]){
   char *arq = argv[2];
   int tamPagina = atoi(argv[3]);
   int tamMemoriaF = atoi(argv[4]);
-  int contador_clock = 0;
+  int contador_clock = 1;
 
   int i;
   /*
@@ -291,8 +291,10 @@ int main (int argc, char *argv[]){
         //se a memoria ja estiver lotada de quadros
         if(indice_quadro_a_inserir == -1){
           //pego o indice da pagina least recently used
-          int menor_ultimo_acesso = -1;
+          int menor_ultimo_acesso = tabela_nao_fifo.paginas[0].ultimo_acesso;
+          indice_quadro_a_inserir = 0;
           for(i_pagina = 0; i_pagina < total_paginas; i_pagina++){
+
             if(tabela_nao_fifo.paginas[i_pagina].ultimo_acesso < menor_ultimo_acesso){
               menor_ultimo_acesso = tabela_nao_fifo.paginas[i_pagina].ultimo_acesso;
               indice_quadro_a_inserir = i_pagina;
@@ -350,7 +352,8 @@ int main (int argc, char *argv[]){
         //se a memoria ja estiver lotada de quadros
         if(indice_quadro_a_inserir == -1){
           //pego o indice da pagina least recently used
-          int menor_ultimo_acesso = -1;
+          int menor_ultimo_acesso = tabela_nao_fifo.paginas[0].ultimo_acesso;
+          indice_quadro_a_inserir = 0;
           int paginas_que_perderam_segunda_chance = 0;
           for(i_pagina = 0; i_pagina < total_paginas; i_pagina++){
             //se todas as paginas perderam segunda chance, todas poderao ser substituidas
@@ -430,7 +433,6 @@ int main (int argc, char *argv[]){
         //se a memoria ja estiver lotada de quadros
         if(indice_quadro_a_inserir == -1){
           //pego o indice de uma pagina aleatoriamente
-          int menor_ultimo_acesso = -1;
           indice_quadro_a_inserir = (rand() % total_paginas);
 
           escritas += tabela_nao_fifo.paginas[indice_quadro_a_inserir].suja ? 1 : 0;
