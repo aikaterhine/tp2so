@@ -17,7 +17,6 @@ typedef struct pagina{
   int ultimo_acesso;//indica o instante do ultimo acesso a essa pagina
   bool suja;//indica se a pagina esta suja ou nao
   bool segunda_chance;//indica se a pagina tem mais uma chance de ficar na tabela(apenas para o algoritmo "second chance")
-  bool ignorar;//indica se a pagina deve ser ignorada no algoritmo de substituicao
 } pagina;
 
 //esta tabela nao sera usada para o fifo ou para o lru
@@ -161,7 +160,6 @@ int main (int argc, char *argv[]){
     for(i = 0; i < total_paginas; i++){
       tabela_nao_fifo.paginas[i].quadro = -1;
       tabela_nao_fifo.paginas[i].segunda_chance = false;
-      tabela_nao_fifo.paginas[i].ignorar = false;
     }
   }
         
@@ -196,6 +194,8 @@ int main (int argc, char *argv[]){
   printf("Executando simulador ...\n");
 
   clock_t inicio = clock();
+
+  int apontador_tabela_nao_fifo_2a = 0;//esta variavel servirá como se fosse um ponteiro que indica de qual página começar a verificação da tabela para o algoritmo second chance
 
   while(fscanf(arquivo,"%x %c\n", &endereco, &operacao) != EOF){
     contador_clock++;
@@ -328,7 +328,6 @@ int main (int argc, char *argv[]){
           //atualiza dados da tabela, referentes a pagina acessada
           tabela_nao_fifo.paginas[i_pagina].ultimo_endereco_acessado = endereco;
           tabela_nao_fifo.paginas[i_pagina].suja = (operacao == 'W');
-          tabela_nao_fifo.paginas[i_pagina].ultimo_acesso = contador_clock;
           tabela_nao_fifo.paginas[i_pagina].segunda_chance = true;
 
           pagina_esta_na_tabela = true;
@@ -351,35 +350,16 @@ int main (int argc, char *argv[]){
 
         //se a memoria ja estiver lotada de quadros
         if(indice_quadro_a_inserir == -1){
-          //pego o indice da pagina least recently used
-          int menor_ultimo_acesso = tabela_nao_fifo.paginas[0].ultimo_acesso;
-          indice_quadro_a_inserir = 0;
-          int paginas_que_perderam_segunda_chance = 0;
-          for(i_pagina = 0; i_pagina < total_paginas; i_pagina++){
-            //se todas as paginas perderam segunda chance, todas poderao ser substituidas
-            if(paginas_que_perderam_segunda_chance == total_paginas){
-              for(i_pagina = 0; i_pagina < total_paginas; i_pagina++){
-                tabela_nao_fifo.paginas[indice_quadro_a_inserir].ignorar = false;
-              }
-            }
+          //percorre a tabela de páginas, a partir do indice guardado na variavel "apontador_tabela_nao_fifo_2a"
+          while(indice_quadro_a_inserir == -1){
+            if(tabela_nao_fifo.paginas[apontador_tabela_nao_fifo_2a].segunda_chance)
+              tabela_nao_fifo.paginas[apontador_tabela_nao_fifo_2a].segunda_chance = false;
+            else
+              indice_quadro_a_inserir = apontador_tabela_nao_fifo_2a;
 
-
-            if((tabela_nao_fifo.paginas[i_pagina].ultimo_acesso < menor_ultimo_acesso) && !tabela_nao_fifo.paginas[i_pagina].ignorar){
-              menor_ultimo_acesso = tabela_nao_fifo.paginas[i_pagina].ultimo_acesso;
-              indice_quadro_a_inserir = i_pagina;
-            }
-
-            //se a pagina least recently used tem uma segunda chance, remove esta segunda chance, a pagina é ignorada e reavalia a tabela de paginas
-            if((i_pagina == total_paginas - 1) && (tabela_nao_fifo.paginas[indice_quadro_a_inserir].segunda_chance)){
-              tabela_nao_fifo.paginas[indice_quadro_a_inserir].segunda_chance = false;
-              tabela_nao_fifo.paginas[indice_quadro_a_inserir].ignorar = true;
-              i_pagina = 0;
-              paginas_que_perderam_segunda_chance++; 
-            }
-          }
-
-          for(i_pagina = 0; i_pagina < total_paginas; i_pagina++){
-            tabela_nao_fifo.paginas[indice_quadro_a_inserir].ignorar = false;
+            apontador_tabela_nao_fifo_2a++; 
+            if(apontador_tabela_nao_fifo_2a == total_paginas)
+              apontador_tabela_nao_fifo_2a = 0;
           }
 
           escritas += tabela_nao_fifo.paginas[indice_quadro_a_inserir].suja ? 1 : 0;
@@ -392,7 +372,6 @@ int main (int argc, char *argv[]){
         tabela_nao_fifo.paginas[indice_quadro_a_inserir].ultimo_endereco_acessado = endereco;
         tabela_nao_fifo.paginas[indice_quadro_a_inserir].ultimo_acesso = contador_clock;
         tabela_nao_fifo.paginas[indice_quadro_a_inserir].segunda_chance = false;
-        tabela_nao_fifo.paginas[indice_quadro_a_inserir].ignorar = false; 
 
         //atualiza um atributo do quadro que estara na memoria
         quadros_memoria[indice_quadro_a_inserir].esta_na_memoria = true;
