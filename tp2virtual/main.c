@@ -7,7 +7,7 @@
 
 
 ///////////////////////////////////////////////////////////////
-//                         tabela                           //
+//                   tabela, pagina e quadro                //
 /////////////////////////////////////////////////////////////
 
 typedef struct pagina{
@@ -21,18 +21,15 @@ typedef struct pagina{
 
 //esta tabela nao sera usada para o fifo ou para o lru
 typedef struct tabela{
-	unsigned int num_entradas;
 	pagina *paginas;
 } tabela;
 
 typedef struct quadro{
-	unsigned int ultimo_acesso; //Os clocks podem ser considerados como a colocação da intrução lida
-	unsigned int _carregamento; //O instante de carregamento para a memória
   bool esta_na_memoria;//indica se o quadro esta na memoria ou nao
 } quadro;
 
 ///////////////////////////////////////////////////////////////
-//                            Lista                         //
+//                            Fila                          //
 /////////////////////////////////////////////////////////////
 
 typedef struct elementoLista{         
@@ -125,9 +122,7 @@ int main (int argc, char *argv[]){
   int contador_clock = 1;
 
   int i;
-  /*
-  Abertura e controle dos parametros de entrada
-  */
+  //abertura do arquivo
   FILE *arquivo = fopen(arq,"r");
 
   if(arquivo == NULL){
@@ -135,7 +130,7 @@ int main (int argc, char *argv[]){
       return 1;
   }
 
-  //Verificando se a política de substituição é válida
+  //Verificando inputs
   if(!valida_entrada(alg)){
   	printf("Erro ao identificar política de substituição.\n");
   	return 0;
@@ -186,12 +181,11 @@ int main (int argc, char *argv[]){
 
   printf("valor de s: %u\n", s);
 
-  unsigned int indice;
   unsigned int miss = 0;
   unsigned int hit = 0;
   unsigned int escritas = 0;
 
-  printf("Executando simulador ...\n");
+  printf("\nExecutando simulador ...\n\n");
 
   clock_t inicio = clock();
 
@@ -411,8 +405,8 @@ int main (int argc, char *argv[]){
 
         //se a memoria ja estiver lotada de quadros
         if(indice_quadro_a_inserir == -1){
-          //pego o indice de uma pagina aleatoriamente
-          indice_quadro_a_inserir = (rand() % total_paginas);
+          //pego o indice do primeiro elemento
+          indice_quadro_a_inserir = 0;
 
           escritas += tabela_nao_fifo.paginas[indice_quadro_a_inserir].suja ? 1 : 0;
         }
